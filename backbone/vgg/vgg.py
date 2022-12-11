@@ -71,11 +71,14 @@ class VGG(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.constant_(m.bias, 0)
 
-
-if __name__ == '__main__':
+def backbone():
     vgg16_info = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M']
     extra_info= [256, 512, 128, 256, 128, 256, 128, 256]
     net= VGG(3, vgg16_info, extra_info, True)
+    return net
+
+if __name__ == '__main__':
+    net= backbone()
     x= torch.rand((1, 3, 300, 300))
     print(net)
     output= net(x)
