@@ -8,7 +8,7 @@ class VGG(nn.Module):
     '''
 
     '''
-    def __init__(self, in_c, nc, info, init_weight=True):
+    def __init__(self, in_c, info, extra_info, init_weight=True):
         super(VGG, self).__init__()
         self.in_c= in_c
         self.vgg_layer= self.create_conv_layer(info)
@@ -19,6 +19,7 @@ class VGG(nn.Module):
             nn.ReLU()
         )
 
+        self.extra_layer= self.create_extra_layers(extra_info)
         
         if init_weight:
             self._initialize_weights()
@@ -42,6 +43,21 @@ class VGG(nn.Module):
         
         return nn.Sequential(*layers)
 
+    def create_extra_layers(self, extra_info):
+        in_c= 1024
+        layers= list()
+
+        layers += [nn.Conv2d(in_c, extra_info[0], kernel_size=1)]
+        layers += [nn.Conv2d(extra_info[0], extra_info[1], kernel_size=3, stride=2, padding=1)]
+        layers += [nn.Conv2d(extra_info[1], extra_info[2], kernel_size=1)]
+        layers += [nn.Conv2d(extra_info[2], extra_info[3], kernel_size=3, stride=2, padding=1)]
+        layers += [nn.Conv2d(extra_info[3], extra_info[4], kernel_size=1)]
+        layers += [nn.Conv2d(extra_info[4], extra_info[5], kernel_size=3)]
+        layers += [nn.Conv2d(extra_info[5], extra_info[6], kernel_size=1)]
+        layers += [nn.Conv2d(extra_info[6], extra_info[7], kernel_size=3)]        
+
+        return nn.Sequential(*layers)
+    
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -57,9 +73,10 @@ class VGG(nn.Module):
 
 
 if __name__ == '__main__':
-    VGG16 = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M']
-    
-    net= VGG(3, 10, VGG16, True)
+    vgg16_info = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M']
+    extra_info= [256, 512, 128, 256, 128, 256, 128, 256]
+    net= VGG(3, vgg16_info, extra_info, True)
     x= torch.rand((1, 3, 300, 300))
+    print(net)
     output= net(x)
     print(output.size())
