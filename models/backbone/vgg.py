@@ -6,6 +6,8 @@ import torch
 from torch import nn
 from models.layers.convolution import ConvBnAct
 
+from models.initialize import weight_initialize
+
 
 class VGG(nn.Module):
     def __init__(self, in_channel, classes, init_weight=True):
@@ -25,11 +27,13 @@ class VGG(nn.Module):
         self.vgg_block_4= self.VGGBlock(block_4)
         self.vgg_block_5= self.VGGBlock(block_5)
         self.classification = nn.Sequential(
-            ConvBnAct(in_c=512, out_c=1280, k=1),
+            ConvBnAct(in_channel=512, out_channel=1280, kernel_size=1),
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(1280, classes, 1)
         )
-       
+        if init_weight:
+            weight_initialize(self)
+    
     def forward(self, x):
         s1 = self.vgg_block_1(x)
         s2 = self.vgg_block_2(s1)
@@ -45,18 +49,27 @@ class VGG(nn.Module):
         '''vgg_info = [in_ch, out_ch, kernels, is_maxpool]
         '''
         layers= list()
-        in_c, out_c, kernels, is_maxpool = vgg_info
+        in_ch, out_ch, kernels, is_maxpool = vgg_info
         for i in range(len(kernels)):
             if i == 0:
-                layers.append(ConvBnAct(in_c = in_c, out_c = out_c, k = kernels[i], s = 1, act=None))
+                layers.append(ConvBnAct(in_channel = in_ch, out_channel = out_ch, kernel_size = kernels[i], stride = 1, act=None))
             else:
-                layers.append(ConvBnAct(in_c = out_c, out_c = out_c, k = kernels[i], s = 1, act=None))
+                layers.append(ConvBnAct(in_channel = out_ch, out_channel = out_ch, kernel_size = kernels[i], stride = 1, act=None))
         if is_maxpool:
             layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
         
         return nn.Sequential(*layers)
 
 if __name__ == "__main__":
+    import torchvision
+    from torchvision import models, transforms
+
+    use_pretrained = True
+    pretrained_net = models.vgg16_bn(pretrained=use_pretrained)
+    pretrained_net.eval()
+    print(pretrained_net)
+
     vgg = VGG(in_channel=3, classes=100)
     x = vgg(torch.rand(1, 3, 224, 224))
+    print(vgg)
 
