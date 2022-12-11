@@ -6,29 +6,26 @@ from backbone.layer.common import Conv, MP
 
 class VGG(nn.Module):
     '''
-    VGG16 Conv4_3 layer
+
     '''
     def __init__(self, in_c, nc, info, init_weight=True):
         super(VGG, self).__init__()
         self.in_c= in_c
         self.vgg_layer= self.create_conv_layer(info)
-        self.add_layer_1= nn.Sequential(
+        self.add_layer= nn.Sequential(
             nn.Conv2d(in_channels= 512, out_channels= 1024, kernel_size=3, padding=6, dilation= 6),
-            nn.ReLU()
-        )
-        self.add_layer_2= nn.Sequential(
+            nn.ReLU(),
             nn.Conv2d(in_channels=1024, out_channels= 1024, kernel_size= 1),
             nn.ReLU()
         )
-        
+
         
         if init_weight:
             self._initialize_weights()
     
     def forward(self,x):
         x= self.vgg_layer(x)
-        x= self.add_layer_1(x)
-        x= self.add_layer_2(x)
+        x= self.add_layer(x)
         return x
     
     def create_conv_layer(self, info):
