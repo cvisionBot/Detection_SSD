@@ -27,5 +27,5 @@ class Conv(nn.Module):
         x= self.conv(x)
         x= self.bn(x)
         x= self.act(x)
-
+        print(x.size())
         return x

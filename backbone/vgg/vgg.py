@@ -5,16 +5,30 @@ import torch.nn as nn
 from backbone.layer.common import Conv, MP
 
 class VGG(nn.Module):
+    '''
+    VGG16 Conv4_3 layer
+    '''
     def __init__(self, in_c, nc, info, init_weight=True):
         super(VGG, self).__init__()
         self.in_c= in_c
         self.vgg_layer= self.create_conv_layer(info)
+        self.add_layer_1= nn.Sequential(
+            nn.Conv2d(in_channels= 512, out_channels= 1024, kernel_size=3, padding=6, dilation= 6),
+            nn.ReLU()
+        )
+        self.add_layer_2= nn.Sequential(
+            nn.Conv2d(in_channels=1024, out_channels= 1024, kernel_size= 1),
+            nn.ReLU()
+        )
+        
         
         if init_weight:
             self._initialize_weights()
     
     def forward(self,x):
         x= self.vgg_layer(x)
+        x= self.add_layer_1(x)
+        x= self.add_layer_2(x)
         return x
     
     def create_conv_layer(self, info):
@@ -24,11 +38,8 @@ class VGG(nn.Module):
         for x in info:
             if type(x) == int:
                 out_c= x
-                
-                layers+= [Conv(in_c, out_c, 3, 1)]
-
-                in_c= x
-                
+                layers+= [Conv(in_c= in_c, out_c= out_c, k= 3, s= 1, p= None, g= 1, act= True)]
+                in_c= x   
             elif x == 'M':
                 layers+= [MP(k=2)]
         
@@ -49,9 +60,9 @@ class VGG(nn.Module):
 
 
 if __name__ == '__main__':
-    VGG16 = [64,64, 'M', 128, 128, 'M', 256, 256,256, 'M', 512,512,512, 'M',512,512,512,'M']
+    VGG16 = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M']
     
     net= VGG(3, 10, VGG16, True)
-    x= torch.rand((1, 3, 224, 224))
+    x= torch.rand((1, 3, 300, 300))
     output= net(x)
-    print(output.shape)
+    print(output.size())
