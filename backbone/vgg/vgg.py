@@ -27,6 +27,7 @@ class VGG(nn.Module):
     def forward(self,x):
         x= self.vgg_layer(x)
         x= self.add_layer(x)
+        x= self.extra_layer(x)
         return x
     
     def create_conv_layer(self, info):
