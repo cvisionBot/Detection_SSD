@@ -79,6 +79,14 @@ def backbone():
     return net
 
 if __name__ == '__main__':
+    import torchvision
+    from torchvision import models, transforms
+    
+    use_pretrained = True
+    pretrained_net = models.vgg16_bn(pretrained=use_pretrained)
+    pretrained_net.eval()
+    print(pretrained_net)
+    
     net= backbone()
     x= torch.rand((1, 3, 300, 300))
     print(net)
