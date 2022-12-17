@@ -2,12 +2,11 @@ import sys
 sys.path.append('')
 import torch
 import torch.nn as nn
-from backbone.layer.common import Conv, MP
+import torchvision
+from model.backbone.layer.common import Conv, MP
 
 class VGG(nn.Module):
-    '''
 
-    '''
     def __init__(self, in_c, info, extra_info, init_weight=True):
         super(VGG, self).__init__()
         self.in_c= in_c
@@ -71,6 +70,9 @@ class VGG(nn.Module):
             elif isinstance(m, nn.Linear):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.constant_(m.bias, 0)
+                
+    def _load_pretrained_weight(self):
+        weight= torchvi
 
 def backbone():
     vgg16_info = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M']
