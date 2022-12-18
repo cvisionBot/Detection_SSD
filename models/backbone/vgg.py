@@ -31,7 +31,7 @@ class block(nn.Module):
         return nn.Sequential(*layers)
 
 class VGG16(nn.Module):
-    def __init__(self, in_channel, num_classes, init_weight=True):
+    def __init__(self, in_channel, init_weight=True):
         '''
         block_list [in_channels, out_channels, kernel_sizes, maxpool]
         init_weight: weight initialize
@@ -99,9 +99,9 @@ class Extra_layer(nn.Module):
         return nn.Sequential(*layer)
 
 class VGG_SSD(nn.Module):
-    def __init__(self, in_channel, num_classes, init_weight = True) -> None:
+    def __init__(self, in_channel, init_weight = True) -> None:
         super(VGG_SSD, self).__init__()
-        self.vgg16 = VGG16(in_channel=in_channel, num_classes=num_classes, init_weight=init_weight)
+        self.vgg16 = VGG16(in_channel=in_channel, init_weight=init_weight)
         """
             about vgg16-ssd, extract total 4 conv blocks at extra layer
         """
@@ -112,9 +112,9 @@ class VGG_SSD(nn.Module):
             [256, 256, False],
         ])
     def forward(self, x):
-        vgg_stages = self.vgg16(x)
-        extra_stages = self.extra(vgg_stages[1])
-        return vgg_stages, extra_stages
+        c5, c7 = self.vgg16(x)
+        c8, c9, c10, c11 = self.extra(c7)
+        return c5, c7, c8, c9, c10, c11
 
 
 class Identity(nn.Module):
@@ -126,7 +126,7 @@ class Identity(nn.Module):
 
 
 if __name__ == "__main__":
-    vgg = VGG_SSD(in_channel=3, num_classes=100, init_weight=False)
-    x = vgg(torch.rand(1, 3, 300, 300))
-    print(vgg)
+    vgg_ssd = VGG_SSD(in_channel=3, init_weight=False)
+    x = vgg_ssd(torch.rand(1, 3, 300, 300))
+    print(x)
 
