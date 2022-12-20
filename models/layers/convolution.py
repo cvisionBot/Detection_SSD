@@ -2,9 +2,7 @@ import torch
 from torch import nn
 
 def autopad(k, p=None):
-    if p is None:
-        p=k // 2 if isinstance(k, int) else [x // 2 for x in k]
-    return p
+    return (int((k - 1) / 2), (int((k - 1) / 2)))
 
 class ConvBnAct(nn.Module):
     def __init__(self, in_channel, out_channel, kernel_size = 1, stride = 1, padding = None, dilation = 1, groups = 1, act = None):

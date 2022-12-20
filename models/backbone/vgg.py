@@ -26,7 +26,7 @@ class block(nn.Module):
             layers.append(ConvBnAct(in_channel = in_ch, out_channel = self.out_ch, kernel_size = self.kernels[i], stride = 1, act=None))
             in_ch = self.out_ch
         if self.maxpool:
-            layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
+            layers.append(nn.MaxPool2d(kernel_size=2, stride=2, padding=0))
         
         return nn.Sequential(*layers)
 
@@ -40,7 +40,7 @@ class VGG16(nn.Module):
         block_1 = [in_channel, 64, (3, 3), True] 
         block_2 = [64, 128, (3, 3), True]
         block_3 = [128, 256, (3, 3, 3), True]
-        block_4 = [256, 512, (3, 3, 3), True]
+        block_4 = [256, 512, (3, 3, 3), False]
         block_5 = [512, 512, (3, 3, 3), False]
         block_6 = [512, 1024]
         block_7 = [1024, 1024, (1,), False]
@@ -49,8 +49,9 @@ class VGG16(nn.Module):
         self.conv2= block(block_2)
         self.conv3= block(block_3)
         self.conv4= block(block_4)
+        self.conv4_mp = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv5= block(block_5)
-        self.conv5_mp = nn.MaxPool2d(kernel_size=3, stride=1)
+        self.conv5_mp = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
         self.conv6= ConvBnAct(block_6[0], block_6[1], 3, 1, 6, 6)
         self.conv7= block(block_7)
 
@@ -62,10 +63,14 @@ class VGG16(nn.Module):
         c2 = self.conv2(c1)
         c3 = self.conv3(c2)
         c4 = self.conv4(c3)
-        c5 = self.conv5(c4)
-        c6 = self.conv6(c5)
+        print(c4.shape)
+        c4_mp = self.conv4_mp(c4)
+        c5 = self.conv5(c4_mp)
+        c5_mp = self.conv5_mp(c5)
+        c6 = self.conv6(c5_mp)
         c7 = self.conv7(c6)
-        return c5, c7
+        print(c7.shape)
+        return c4, c7
 
 class Extra_layer(nn.Module):
     def __init__(self, layer_info) -> None:
@@ -83,9 +88,13 @@ class Extra_layer(nn.Module):
     
     def forward(self, x):
         c1 = self.extra_conv1(x)
+        print(c1.shape)
         c2 = self.extra_conv2(c1)
+        print(c2.shape)
         c3 = self.extra_conv3(c2)
+        print(c3.shape)
         c4 = self.extra_conv4(c3)
+        print(c4.shape)
         return c1, c2, c3, c4
 
     def block(self, layer_info):
@@ -112,9 +121,9 @@ class VGG_SSD(nn.Module):
             [256, 256, False],
         ])
     def forward(self, x):
-        c5, c7 = self.vgg16(x)
+        c4, c7 = self.vgg16(x)
         c8, c9, c10, c11 = self.extra(c7)
-        return c5, c7, c8, c9, c10, c11
+        return c4, c7, c8, c9, c10, c11
 
 
 class Identity(nn.Module):
@@ -128,5 +137,4 @@ class Identity(nn.Module):
 if __name__ == "__main__":
     vgg_ssd = VGG_SSD(in_channel=3, init_weight=False)
     x = vgg_ssd(torch.rand(1, 3, 300, 300))
-    print(x)
 
