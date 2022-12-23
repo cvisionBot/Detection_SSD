@@ -23,10 +23,10 @@ class block(nn.Module):
         layers= list()
         in_ch = self.in_ch
         for i in range(len(self.kernels)):
-            layers.append(ConvBnAct(in_channel = in_ch, out_channel = self.out_ch, kernel_size = self.kernels[i], stride = 1, act=None))
+            layers.append(ConvBnAct(in_channel = in_ch, out_channel = self.out_ch, kernel_size = self.kernels[i], stride = 1))
             in_ch = self.out_ch
         if self.maxpool:
-            layers.append(nn.MaxPool2d(kernel_size=2, stride=2, padding=0))
+            layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
         
         return nn.Sequential(*layers)
 
@@ -39,7 +39,7 @@ class VGG16(nn.Module):
         super(VGG16, self).__init__()
         block_1 = [in_channel, 64, (3, 3), True] 
         block_2 = [64, 128, (3, 3), True]
-        block_3 = [128, 256, (3, 3, 3), True]
+        block_3 = [128, 256, (3, 3, 3), False]
         block_4 = [256, 512, (3, 3, 3), False]
         block_5 = [512, 512, (3, 3, 3), False]
         block_6 = [512, 1024]
@@ -48,11 +48,12 @@ class VGG16(nn.Module):
         self.conv1= block(block_1)
         self.conv2= block(block_2)
         self.conv3= block(block_3)
+        self.conv3_mp = nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)
         self.conv4= block(block_4)
         self.conv4_mp = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv5= block(block_5)
-        self.conv5_mp = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
-        self.conv6= ConvBnAct(block_6[0], block_6[1], 3, 1, 6, 6)
+        self.conv5_mp = nn.MaxPool2d(kernel_size=3, stride=1)
+        self.conv6= ConvBnAct(in_channel=block_6[0], out_channel=block_6[1], kernel_size=3, stride=1, padding=6, dilation=6)
         self.conv7= block(block_7)
 
         if init_weight:
@@ -62,7 +63,8 @@ class VGG16(nn.Module):
         c1 = self.conv1(x)
         c2 = self.conv2(c1)
         c3 = self.conv3(c2)
-        c4 = self.conv4(c3)
+        c3_mp = self.conv3_mp(c3)
+        c4 = self.conv4(c3_mp) # feature map 1
         print(c4.shape)
         c4_mp = self.conv4_mp(c4)
         c5 = self.conv5(c4_mp)
